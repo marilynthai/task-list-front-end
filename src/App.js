@@ -3,6 +3,7 @@ import TaskList from './components/TaskList.js';
 import './App.css';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import NewTaskForm from './components/NewTaskForm';
 
 // const TASKS = [
 //   {
@@ -23,6 +24,7 @@ import axios from 'axios';
 
 const App = () => {
   const URL = 'https://task-list-api-c17.herokuapp.com/tasks';
+  const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
     axios
@@ -44,8 +46,6 @@ const App = () => {
       });
   }, []);
 
-  const [tasks, setTasks] = useState([]);
-
   const toggleComplete = (taskId) => {
     const updatedTasks = [];
     // axios.patch(`${URL}/${taskId}`);
@@ -56,18 +56,14 @@ const App = () => {
       } else {
         const completeStatus = task.isComplete;
         if (completeStatus === true) {
-          axios.patch(`${URL}/${taskId}/mark_incomplete`).then(() => {
-            const newTask = { ...task, isComplete: false };
-            updatedTasks.push(newTask);
-          });
+          axios.patch(`${URL}/${taskId}/mark_incomplete`).then(() => {});
+          const newTask = { ...task, isComplete: false };
+          updatedTasks.push(newTask);
         } else if (completeStatus === false) {
-          axios.patch(`${URL}/${taskId}/mark_complete`).then(() => {
-            const newTask = { ...task, isComplete: true };
-            updatedTasks.push(newTask);
-          });
+          axios.patch(`${URL}/${taskId}/mark_complete`).then(() => {});
+          const newTask = { ...task, isComplete: true };
+          updatedTasks.push(newTask);
         }
-        // const newTask = { ...task, isComplete: !task.isComplete };
-        // updatedTasks.push(newTask);
       }
     }
     setTasks(updatedTasks);
@@ -90,6 +86,31 @@ const App = () => {
       });
   };
 
+  const addTask = (newTask) => {
+    axios
+      .post(URL, newTask)
+      .then((response) => {
+        console.log(response);
+        const newTasksList = [...tasks];
+        const newTaskData = {
+          id: response.data.task.id,
+          description: newTask.description,
+          title: newTask.title,
+          isComplete: false,
+        };
+
+        console.log(newTaskData);
+        newTasksList.push(newTaskData);
+        setTasks(newTasksList);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+    // const newTasksList = [...tasks];
+    // const nextId = Math.max(...newTasksList.map((task) => task.id)) + 1;
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -97,13 +118,12 @@ const App = () => {
       </header>
       <main>
         <div>
-          {
-            <TaskList
-              tasks={tasks}
-              toggleComplete={toggleComplete}
-              deleteTask={deleteTask}
-            />
-          }
+          <TaskList
+            tasks={tasks}
+            toggleComplete={toggleComplete}
+            deleteTask={deleteTask}
+          />
+          <NewTaskForm addTaskCallback={addTask} />
         </div>
       </main>
     </div>
